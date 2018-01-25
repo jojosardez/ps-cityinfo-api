@@ -26,6 +26,9 @@ namespace CityInfo.API
                 app.UseExceptionHandler();
             }
 
+            // Add status code pages to the request pipeline
+            app.UseStatusCodePages();
+
             // Add MVC middleware to the request pipeline
             app.UseMvc();
 
