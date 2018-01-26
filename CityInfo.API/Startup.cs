@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 
 namespace CityInfo.API
 {
@@ -35,6 +36,8 @@ namespace CityInfo.API
         {
             loggerFactory.AddConsole();
             loggerFactory.AddDebug();
+
+            loggerFactory.AddNLog();
 
             if (env.IsDevelopment())
             {
