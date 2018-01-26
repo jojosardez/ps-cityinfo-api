@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
@@ -10,6 +11,35 @@ namespace CityInfo.API
 {
     public class Startup
     {
+
+        #region .Net Core 1 Configuration File Accessing
+
+        /* 
+        public static IConfigurationRoot Configuration;
+
+        public Startup(IHostingEnvironment env)
+        {
+            // Add config file
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appSettings.json", optional: false, reloadOnChange: true);
+            Configuration = builder.Build();
+        }
+        */
+
+        #endregion
+
+        #region .Net Core 2 Configuration File Accessing
+
+        public static IConfiguration Configuration { get; private set; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        #endregion
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -40,11 +70,13 @@ namespace CityInfo.API
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            // Add logger providers to the request pipeline
             loggerFactory.AddConsole();
             loggerFactory.AddDebug();
 
             loggerFactory.AddNLog();
 
+            // Add exception page to the request pipeline
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
