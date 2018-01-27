@@ -1,0 +1,3 @@
+﻿Add-Migration CityInfoDbInitialMigration
+Update-Database
+
