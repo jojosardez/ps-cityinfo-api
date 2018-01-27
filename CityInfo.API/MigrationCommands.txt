@@ -1,3 +1,6 @@
 ﻿Add-Migration CityInfoDbInitialMigration
 Update-Database
 
+Add-Migration CityInfoDBAddPOIDescription
+Update-Database
+
