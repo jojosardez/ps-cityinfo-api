@@ -119,6 +119,7 @@ namespace CityInfo.API
                 cfg.CreateMap<Entities.PointOfInterest, Models.PointOfInterestDto>();
                 cfg.CreateMap<Models.PointOfInterestForCreationDto, Entities.PointOfInterest>();
                 cfg.CreateMap<Models.PointOfInterestForUpdateDto, Entities.PointOfInterest>();
+                cfg.CreateMap<Entities.PointOfInterest, Models.PointOfInterestForUpdateDto>();
             });
 
             // Add MVC middleware to the request pipeline
