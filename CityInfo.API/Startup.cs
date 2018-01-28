@@ -70,7 +70,7 @@ namespace CityInfo.API
             services.AddTransient<IMailService, CloudMailService>();
 #endif
 
-            var connectionString = Startup.Configuration["connectionStrings:cityInfoDBConnectionString"];
+            var connectionString = Startup.Configuration["connectionStrings:cityInfoDBConnectionString"].Replace(@"\\", @"\");
             services.AddDbContext<CityInfoContext>(o => o.UseSqlServer(connectionString));
         }
 
