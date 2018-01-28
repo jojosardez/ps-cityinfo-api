@@ -108,24 +108,47 @@ namespace CityInfo.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            #region Using in memory data store
+
+            // Using in memory data store
+
+            //var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+            //if (city == null)
+            //    return NotFound();
+
+            //var maxPointOfInterestId = CitiesDataStore.Current.Cities
+            //    .SelectMany(c => c.PointsOfInterest).Max(p => p.Id);
+            //var finalPointOfInterest = new PointOfInterestDto
+            //{
+            //    Id = ++maxPointOfInterestId,
+            //    Name = pointOfInterest.Name,
+            //    Description = pointOfInterest.Description
+            //};
+            //city.PointsOfInterest.Add(finalPointOfInterest);
+
+            //return CreatedAtRoute(
+            //    "GetPointOfInterest",
+            //    new { cityId = cityId, id = finalPointOfInterest.Id },
+            //    finalPointOfInterest);
+
+            #endregion
+
+
+            // Using persistent data store
+            if (!_repository.CityExists(cityId))
                 return NotFound();
 
-            var maxPointOfInterestId = CitiesDataStore.Current.Cities
-                .SelectMany(c => c.PointsOfInterest).Max(p => p.Id);
-            var finalPointOfInterest = new PointOfInterestDto
-            {
-                Id = ++maxPointOfInterestId,
-                Name = pointOfInterest.Name,
-                Description = pointOfInterest.Description
-            };
-            city.PointsOfInterest.Add(finalPointOfInterest);
+            var finalPointOfInterest = Mapper.Map<Entities.PointOfInterest>(pointOfInterest);
+            _repository.AddPointOfInterestForCity(cityId, finalPointOfInterest);
+            if (!_repository.Save())
+                return StatusCode(500, "A problem happened while handling your request.");
+
+            var createdPointOfInterestToReturn = Mapper.Map<Models.PointOfInterestDto>(finalPointOfInterest);
 
             return CreatedAtRoute(
                 "GetPointOfInterest",
-                new {cityId = cityId, id = finalPointOfInterest.Id},
-                finalPointOfInterest);
+                new {cityId = cityId, id = createdPointOfInterestToReturn.Id},
+                createdPointOfInterestToReturn);
         }
 
         [HttpPut("{cityId}/pointsofinterest/{id}")]
