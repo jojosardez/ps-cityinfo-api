@@ -111,7 +111,6 @@ namespace CityInfo.API.Controllers
             #region Using in memory data store
 
             // Using in memory data store
-
             //var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
             //if (city == null)
             //    return NotFound();
@@ -164,16 +163,37 @@ namespace CityInfo.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            #region Using in memory data store
+
+            // Using in memory data store
+            //var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+            //if (city == null)
+            //    return NotFound();
+
+            //var pointOfInterestFromStore = city.PointsOfInterest.FirstOrDefault(p => p.Id == id);
+            //if (pointOfInterestFromStore == null)
+            //    return NotFound();
+
+            //pointOfInterestFromStore.Name = pointOfInterest.Name;
+            //pointOfInterestFromStore.Description = pointOfInterest.Description;
+
+            //return NoContent();
+
+            #endregion
+
+
+            // Using persistent data store
+            if (!_repository.CityExists(cityId))
                 return NotFound();
 
-            var pointOfInterestFromStore = city.PointsOfInterest.FirstOrDefault(p => p.Id == id);
-            if (pointOfInterestFromStore == null)
+            var pointOfInterestEntity = _repository.GetPointOfInterestForCity(cityId, id);
+            if (pointOfInterestEntity == null)
                 return NotFound();
 
-            pointOfInterestFromStore.Name = pointOfInterest.Name;
-            pointOfInterestFromStore.Description = pointOfInterest.Description;
+            Mapper.Map(pointOfInterest, pointOfInterestEntity);
+
+            if (!_repository.Save())
+                return StatusCode(500, "A problem happened while handling your request.");
 
             return NoContent();
         }
