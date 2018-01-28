@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CityInfo.API.Controllers
@@ -13,11 +14,14 @@ namespace CityInfo.API.Controllers
     {
         private readonly ILogger<PointsOfInterestController> _logger;
         private readonly IMailService _mailService;
+        private readonly ICityInfoRepository _repository;
 
-        public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailService)
+        public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailService,
+            ICityInfoRepository repository)
         {
             _logger = logger;
             _mailService = mailService;
+            _repository = repository;
         }
 
         [HttpGet("{cityId}/pointsofinterest")]
@@ -25,14 +29,40 @@ namespace CityInfo.API.Controllers
         {
             try
             {
-                var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-                if (city == null)
+                #region Using in memory data store
+                // Using in memory data store
+                //var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+                //if (city == null)
+                //{
+                //    _logger.LogInformation($"City with id {cityId} wasn't found when accessing points of interest.");
+                //    return NotFound();
+                //}
+
+                //return Ok(city.PointsOfInterest);
+                #endregion
+
+
+                // Using persistent data store
+                if (!_repository.CityExists(cityId))
                 {
                     _logger.LogInformation($"City with id {cityId} wasn't found when accessing points of interest.");
                     return NotFound();
                 }
 
-                return Ok(city.PointsOfInterest);
+                var pointsOfInterestForCity = _repository.GetPointsOfInterestForCity(cityId);
+
+                var pointsOfInterestForCityResults = new List<PointOfInterestDto>();
+                foreach (var poi in pointsOfInterestForCity)
+                {
+                    pointsOfInterestForCityResults.Add(new PointOfInterestDto
+                    {
+                        Id = poi.Id,
+                        Name = poi.Name,
+                        Description = poi.Description
+                    });
+                }
+
+                return Ok(pointsOfInterestForCityResults);
             }
             catch (Exception ex)
             {
@@ -42,17 +72,39 @@ namespace CityInfo.API.Controllers
         }
 
         [HttpGet("{cityId}/pointsofinterest/{id}", Name = "GetPointOfInterest")]
-        public IActionResult GetPointsOfInterest(int cityId, int id)
+        public IActionResult GetPointOfInterest(int cityId, int id)
         {
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            #region Using in memory data store
+            // Using in memory data store
+            //var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+            //if (city == null)
+            //    return NotFound();
+
+            //var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == id);
+            //if (pointOfInterest == null)
+            //    return NotFound();
+
+            //return Ok(pointOfInterest);
+            #endregion
+
+
+            // Using persistent data store
+            if (!_repository.CityExists(cityId))
                 return NotFound();
 
-            var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == id);
+            var pointOfInterest = _repository.GetPointOfInterestForCity(cityId, id);
+
             if (pointOfInterest == null)
                 return NotFound();
 
-            return Ok(pointOfInterest);
+            var pointOfInterestResult = new PointOfInterestDto
+            {
+                Id = pointOfInterest.Id,
+                Name = pointOfInterest.Name,
+                Description = pointOfInterest.Description
+            };
+
+            return Ok(pointOfInterestResult);
         }
 
         [HttpPost("{cityId}/pointsofinterest")]
