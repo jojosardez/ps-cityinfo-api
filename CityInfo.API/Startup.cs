@@ -111,9 +111,19 @@ namespace CityInfo.API
             // Add status code pages to the request pipeline
             app.UseStatusCodePages();
 
+            // Configure mappings
+            AutoMapper.Mapper.Initialize(cfg =>
+            {
+                cfg.CreateMap<Entities.City, Models.CityWithoutPointsOfInterestDto>();
+                cfg.CreateMap<Entities.City, Models.CityDto>();
+                cfg.CreateMap<Entities.PointOfInterest, Models.PointOfInterestDto>();
+            });
+
             // Add MVC middleware to the request pipeline
             app.UseMvc();
 
+
+            // Default implementation
             //app.Run(async (context) =>
             //{
             //    await context.Response.WriteAsync("Hello World!");
