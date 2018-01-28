@@ -64,18 +64,30 @@ namespace CityInfo.API
             //        casterResolver.NamingStrategy = null;
             //    }
             //});
+
+            // Transient - new instance will be created everytime they are accessed
+            // Scoped - new instance per request - lifetime is within the request
+            // Singleton - created the first time it is called. Only one instance is created while the service is running
+
+            // Register mail service in the built-in dependency injection container
 #if DEBUG
             services.AddTransient<IMailService, LocalMailService>();
 #else
             services.AddTransient<IMailService, CloudMailService>();
 #endif
 
-            var connectionString = Startup.Configuration["connectionStrings:cityInfoDBConnectionString"].Replace(@"\\", @"\");
+            // Register database context in the built-in dependency injection container
+            var connectionString = Startup.Configuration["connectionStrings:cityInfoDBConnectionString"]
+                .Replace(@"\\", @"\");
             services.AddDbContext<CityInfoContext>(o => o.UseSqlServer(connectionString));
+
+            // Register repository in the built-in dependency injection container
+            services.AddScoped<ICityInfoRepository, CityInfoRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, CityInfoContext cityInfoContext)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
+            CityInfoContext cityInfoContext)
         {
             // Add logger providers to the request pipeline
             loggerFactory.AddConsole();
