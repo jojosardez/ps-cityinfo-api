@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace CityInfo.API.Controllers
 {
@@ -265,7 +264,6 @@ namespace CityInfo.API.Controllers
             if (pointOfInterestEntity == null)
                 return NotFound();
 
-
             var pointOfInterestToPatch = Mapper.Map<PointOfInterestForUpdateDto>(pointOfInterestEntity);
 
             patchDoc.ApplyTo(pointOfInterestToPatch, ModelState);
@@ -291,18 +289,37 @@ namespace CityInfo.API.Controllers
         [HttpDelete("{cityId}/pointsofinterest/{id}")]
         public IActionResult DeletePointOfInterest(int cityId, int id)
         {
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            #region Using in memory data store
+
+            // Using in memory data store
+            //var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+            //if (city == null)
+            //    return NotFound();
+
+            //var pointOfInterestFromStore = city.PointsOfInterest.FirstOrDefault(p => p.Id == id);
+            //if (pointOfInterestFromStore == null)
+            //    return NotFound();
+
+            //city.PointsOfInterest.Remove(pointOfInterestFromStore);
+
+            #endregion
+
+
+            // Using persistent data store
+            if (!_repository.CityExists(cityId))
                 return NotFound();
 
-            var pointOfInterestFromStore = city.PointsOfInterest.FirstOrDefault(p => p.Id == id);
-            if (pointOfInterestFromStore == null)
+            var pointOfInterestEntity = _repository.GetPointOfInterestForCity(cityId, id);
+            if (pointOfInterestEntity == null)
                 return NotFound();
 
-            city.PointsOfInterest.Remove(pointOfInterestFromStore);
+            _repository.DeletePointOfInterest(pointOfInterestEntity);
+
+            if (!_repository.Save())
+                return StatusCode(500, "A problem happened while handling your request.");
 
             _mailService.Send("Point of interest deleted.",
-                $"Point of interest {pointOfInterestFromStore.Name} with id {pointOfInterestFromStore.Id} was deleted.");
+                $"Point of interest {pointOfInterestEntity.Name} with id {pointOfInterestEntity.Id} was deleted.");
 
             return NoContent();
         }
